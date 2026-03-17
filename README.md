@@ -18,27 +18,27 @@ dl-project/
 │   └── splits/                     # train.csv, val.csv, test.csv
 │
 ├── notebooks/
-│   ├── 01_eda.ipynb                # Exploratory data analysis (Member 1)
-│   ├── 02_baseline_cnn.ipynb       # Baseline CNN (Member 2)
-│   ├── 03_custom_cnn.ipynb         # Deeper custom CNN (Member 2)
-│   ├── 04_transfer_learning.ipynb  # Pretrained backbone experiments (Member 3)
-│   └── 05_evaluation.ipynb         # Cross-model evaluation & error analysis (Member 4)
+│   ├── 01_eda.ipynb                # Exploratory data analysis (Miguel)
+│   ├── 02_baseline_cnn.ipynb       # Baseline CNN (Goncalo)
+│   ├── 03_custom_cnn.ipynb         # Deeper custom CNN (Goncalo)
+│   ├── 04_transfer_learning.ipynb  # Pretrained backbone experiments (Anastasiia)
+│   └── 05_evaluation.ipynb         # Cross-model evaluation & error analysis (Leonor)
 │
 ├── src/
-│   ├── data_loader.py              # Dataset pipeline & augmentation (M1 + M3)
+│   ├── data_loader.py              # Dataset pipeline & augmentation (Miguel + Anastasiia)
 │   ├── models/
-│   │   ├── baseline.py             # Shallow baseline CNN (Member 2)
-│   │   ├── custom_cnn.py           # Deep custom CNN (Member 2)
-│   │   └── transfer.py             # Transfer learning model (Member 3)
+│   │   ├── baseline.py             # Shallow baseline CNN (Goncalo)
+│   │   ├── custom_cnn.py           # Deep custom CNN (Goncalo)
+│   │   └── transfer.py             # Transfer learning model (Anastasiia)
 │   ├── train.py                    # Shared training loop
-│   └── evaluate.py                 # Metrics, plots, confusion matrix (Member 4)
+│   └── evaluate.py                 # Metrics, plots, confusion matrix (Leonor)
 │
 ├── results/
-│   ├── figures/                    # All plots and visualisations (M4 output)
+│   ├── figures/                    # All plots and visualisations (Leonor's output)
 │   └── logs/                       # Training history CSVs / TensorBoard logs
 │
 ├── report/
-│   └── report.pdf                  # Final 7-page report (Member 5)
+│   └── report.pdf                  # Final 7-page report (Henrique)
 │
 ├── requirements.txt
 ├── README.md
@@ -53,11 +53,11 @@ dl-project/
 
 | Member | Role | Primary Responsibilities |
 |--------|------|--------------------------|
-| **Member 1** | Project Lead & Data Specialist | Dataset preprocessing, EDA, train/val/test splits, repo management, final submission packaging |
-| **Member 2** | Baseline & CNN Architect | Baseline CNN, deep custom CNN, hyperparameter tuning, architectural ablations |
-| **Member 3** | Transfer Learning Specialist | Pretrained backbones (EfficientNetV2 / ResNet50), fine-tuning, data augmentation pipeline |
-| **Member 4** | Evaluation & Analysis Lead | Metrics (accuracy, F1-macro), confusion matrices, error analysis, all result figures |
-| **Member 5** | Report Writer | Full 7-page report, problem formalisation, methodology narrative, submission formatting |
+| **Miguel** | Project Lead & Data Specialist | Dataset preprocessing, EDA, train/val/test splits, repo management, final submission packaging |
+| **Goncalo** | Baseline & CNN Architect | Baseline CNN, deep custom CNN, hyperparameter tuning, architectural ablations |
+| **Anastasiia** | Transfer Learning Specialist | Pretrained backbones (EfficientNetV2 / ResNet50), fine-tuning, data augmentation pipeline |
+| **Leonor** | Evaluation & Analysis Lead | Metrics (accuracy, F1-macro), confusion matrices, error analysis, all result figures |
+| **Henrique** | Report Writer | Full 7-page report, problem formalisation, methodology narrative, submission formatting |
 
 ---
 
@@ -65,12 +65,12 @@ dl-project/
 
 | Week | Dates | Milestones | Owner(s) |
 |------|-------|------------|----------|
-| **Week 1** | Mar 17–23 | Repo setup, dataset download & EDA, baseline model running end-to-end | M1, M2 |
-| **Week 2** | Mar 24–30 | Custom CNN tuned, transfer learning experiments started, error analysis begun | M2, M3, M4 |
-| **Week 3** | Mar 31–Apr 6 | All models benchmarked, full results ready, report v1 drafted | M3, M4, M5 |
+| **Week 1** | Mar 17–23 | Repo setup, dataset download & EDA, baseline model running end-to-end | Miguel, Goncalo |
+| **Week 2** | Mar 24–30 | Custom CNN tuned, transfer learning experiments started, error analysis begun | Goncalo, Anastasiia, Leonor |
+| **Week 3** | Mar 31–Apr 6 | All models benchmarked, full results ready, report v1 drafted | Anastasiia, Leonor, Henrique |
 | **Week 4** | Apr 7–13 | Report v2 with all sections integrated, final hyperparameter refinements | All |
-| **Week 5** | Apr 14–20 | Final review, report polish, submission prep | M1, M5 |
-| **Deadline** | **Apr 24, 17:00** | Upload `GROUP_X.rar` to Moodle | M1 |
+| **Week 5** | Apr 14–20 | Final review, report polish, submission prep | Miguel, Henrique |
+| **Deadline** | **Apr 24, 17:00** | Upload `GROUP_X.rar` to Moodle | Miguel |
 
 ---
 
@@ -115,18 +115,18 @@ python src/evaluate.py --model transfer --checkpoint results/logs/transfer_best.
 
 ## 🏗️ Models Overview
 
-### Baseline CNN (Member 2)
+### Baseline CNN (Goncalo)
 A shallow convolutional network used as a performance floor. Establishes the training pipeline and confirms data is loading correctly before more complex models are introduced.
 
-### Custom CNN (Member 2)
+### Custom CNN (Goncalo)
 A deeper architecture with multiple Conv blocks, Batch Normalisation, and Dropout, designed and tuned specifically for the WikiArt classification task.
 
-### Transfer Learning (Member 3)
+### Transfer Learning (Anastasiia)
 Fine-tuned pretrained backbone (EfficientNetV2 or ResNet50) with a custom classification head. Experiments cover both feature-extraction mode and full fine-tuning, combined with an augmentation pipeline (random crop, horizontal flip, colour jitter).
 
 ---
 
-## 📊 Evaluation Framework (Member 4)
+## 📊 Evaluation Framework (Leonor)
 
 All models are evaluated on the held-out test set using:
 
@@ -144,8 +144,8 @@ All figures are saved to `results/figures/` with descriptive names (e.g. `confus
 
 1. Each member works on a dedicated branch: `feature/<topic>` (e.g. `feature/transfer-learning`)
 2. Open a Pull Request into `main` when a milestone is complete
-3. **Member 1** reviews and merges all PRs
-4. Commit messages follow the format: `[M2] Add custom CNN with BN and dropout`
+3. **Miguel** reviews and merges all PRs
+4. Commit messages follow the format: `[Goncalo] Add custom CNN with BN and dropout`
 
 ---
 
