@@ -13,6 +13,7 @@ build/
 # Virtual environments
 venv/
 .env/
+.venv/
 
 # IDE
 .vscode/
@@ -31,3 +32,6 @@ Thumbs.db
 *.h5
 *.hdf5
 *.keras
+
+# Claude
+CLAUDE.md
