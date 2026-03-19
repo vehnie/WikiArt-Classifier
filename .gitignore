@@ -1,6 +1,10 @@
 # Data directories (large files)
-data/raw/
-data/processed/
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/splits/*
+!data/splits/.gitkeep
 
 # Python
 __pycache__/
