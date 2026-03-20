@@ -33,10 +33,4 @@ def build_baseline_model(num_classes, input_shape=(224, 224, 3)):
         layers.Dense(num_classes, activation='softmax')
     ])
     
-    model.compile(
-        optimizer='adam',
-        loss='sparse_categorical_crossentropy', # Use sparse categorical crossentropy since labels are integers
-        metrics=['accuracy']
-    )
-    
     return model
