@@ -1,7 +1,7 @@
 # 🎨 WikiArt Painting Classifier
 ### Deep Learning Project — NOVA IMS 2025/2026
 
-A deep learning image classification system built on a subset of the **WikiArt** dataset, implemented in **Keras**. The project explores and compares multiple architectures — from custom CNNs to fine-tuned pretrained models — with a rigorous evaluation framework.
+A deep learning image classification system built on a subset of the **WikiArt** dataset, implemented in **Keras**. The project explores and compares multiple architectures — from custom CNNs and fine-tuned pretrained models to a Vision Transformer (ViT) — with a rigorous evaluation framework and Grad-CAM explainability analysis.
 
 > **Deadline:** 24 April 2026, 17:00 · **Submission:** Moodle (GROUP_X.rar)
 
@@ -22,19 +22,24 @@ dl-project/
 │   ├── 02_baseline_cnn.ipynb       # Baseline CNN (Goncalo)
 │   ├── 03_custom_cnn.ipynb         # Deeper custom CNN (Goncalo)
 │   ├── 04_transfer_learning.ipynb  # Pretrained backbone experiments (Anastasiia)
-│   └── 05_evaluation.ipynb         # Cross-model evaluation & error analysis (Leonor)
+│   ├── 05_vit.ipynb                # Vision Transformer fine-tuning (Miguel)
+│   ├── 06_gradcam.ipynb            # Grad-CAM explainability analysis (Miguel)
+│   └── 07_evaluation.ipynb         # Cross-model evaluation & error analysis (Leonor)
 │
 ├── src/
 │   ├── data_loader.py              # Dataset pipeline & augmentation (Miguel + Anastasiia)
 │   ├── models/
 │   │   ├── baseline.py             # Shallow baseline CNN (Goncalo)
 │   │   ├── custom_cnn.py           # Deep custom CNN (Goncalo)
-│   │   └── transfer.py             # Transfer learning model (Anastasiia)
+│   │   ├── transfer.py             # Transfer learning model (Anastasiia)
+│   │   └── vit.py                  # Vision Transformer fine-tuning (Miguel)
 │   ├── train.py                    # Shared training loop
-│   └── evaluate.py                 # Metrics, plots, confusion matrix (Leonor)
+│   ├── evaluate.py                 # Metrics, plots, confusion matrix (Leonor)
+│   └── gradcam.py                  # Grad-CAM heatmap generation (Miguel) 
 │
 ├── results/
-│   ├── figures/                    # All plots and visualisations (Leonor's output)
+│   ├── figures/                    # All plots and visualisations (Leonor)
+│   ├── gradcam/                    # Grad-CAM heatmaps per class (Miguel) 
 │   └── logs/                       # Training history CSVs / TensorBoard logs
 │
 ├── report/
@@ -53,7 +58,7 @@ dl-project/
 
 | Member | Role | Primary Responsibilities |
 |--------|------|--------------------------|
-| **Miguel** | Project Lead & Data Specialist | Dataset preprocessing, EDA, train/val/test splits, repo management, final submission packaging |
+| **Miguel** | Project Lead, Data & SOTA | Dataset preprocessing, EDA, train/val/test splits, repo management, **ViT fine-tuning**, **Grad-CAM explainability**, final submission packaging |
 | **Goncalo** | Baseline & CNN Architect | Baseline CNN, deep custom CNN, hyperparameter tuning, architectural ablations |
 | **Anastasiia** | Transfer Learning Specialist | Pretrained backbones (EfficientNetV2 / ResNet50), fine-tuning, data augmentation pipeline |
 | **Leonor** | Evaluation & Analysis Lead | Metrics (accuracy, F1-macro), confusion matrices, error analysis, all result figures |
@@ -66,8 +71,8 @@ dl-project/
 | Week | Dates | Milestones | Owner(s) |
 |------|-------|------------|----------|
 | **Week 1** | Mar 17–23 | Repo setup, dataset download & EDA, baseline model running end-to-end | Miguel, Goncalo |
-| **Week 2** | Mar 24–30 | Custom CNN tuned, transfer learning experiments started, error analysis begun | Goncalo, Anastasiia, Leonor |
-| **Week 3** | Mar 31–Apr 6 | All models benchmarked, full results ready, report v1 drafted | Anastasiia, Leonor, Henrique |
+| **Week 2** | Mar 24–30 | Custom CNN tuned, transfer learning experiments started, error analysis begun, ViT setup | Goncalo, Anastasiia, Leonor, Miguel |
+| **Week 3** | Mar 31–Apr 6 | All models benchmarked (incl. ViT), Grad-CAM heatmaps generated, report v1 drafted | Miguel, Anastasiia, Leonor, Henrique |
 | **Week 4** | Apr 7–13 | Report v2 with all sections integrated, final hyperparameter refinements | All |
 | **Week 5** | Apr 14–20 | Final review, report polish, submission prep | Miguel, Henrique |
 | **Deadline** | **Apr 24, 17:00** | Upload `GROUP_X.rar` to Moodle | Miguel |
@@ -104,11 +109,19 @@ python src/train.py --model custom_cnn --epochs 50
 
 # Transfer learning (EfficientNetV2)
 python src/train.py --model transfer --backbone efficientnetv2 --epochs 20
+
+# Vision Transformer (ViT-B/16 fine-tuned)
+python src/train.py --model vit --epochs 20
 ```
 
 ### 5. Evaluate
 ```bash
 python src/evaluate.py --model transfer --checkpoint results/logs/transfer_best.h5
+```
+
+### 6. Generate Grad-CAM heatmaps
+```bash
+python src/gradcam.py --model vit --checkpoint results/logs/vit_best.h5 --output results/gradcam/
 ```
 
 ---
@@ -123,6 +136,9 @@ A deeper architecture with multiple Conv blocks, Batch Normalisation, and Dropou
 
 ### Transfer Learning (Anastasiia)
 Fine-tuned pretrained backbone (EfficientNetV2 or ResNet50) with a custom classification head. Experiments cover both feature-extraction mode and full fine-tuning, combined with an augmentation pipeline (random crop, horizontal flip, colour jitter).
+
+### Vision Transformer — ViT-B/16 (Miguel) 
+Fine-tuned pretrained Vision Transformer (ViT-B/16) with a custom classification head. The image is split into 16×16 patches, each treated as a token fed into multi-head self-attention blocks — allowing the model to capture long-range compositional relationships across a painting that CNNs inherently miss. Implemented natively in Keras using `layers.MultiHeadAttention`, with weights initialised from ImageNet-21K pretraining.
 
 ---
 
@@ -140,9 +156,22 @@ All figures are saved to `results/figures/` with descriptive names (e.g. `confus
 
 ---
 
+## 🔍 Explainability — Grad-CAM (Miguel)
+
+Applied to the best-performing model across all four architectures. Grad-CAM computes the gradient of the predicted class score with respect to the final convolutional (or attention) layer's feature maps, producing a heatmap that highlights which regions of a painting were decisive for the classification.
+
+This is applied to:
+- **Correct predictions** — confirming the model attends to semantically meaningful features (brushwork, composition, colour palette)
+- **Misclassified samples** — diagnosing failure modes and potential dataset biases
+- **Cross-class comparisons** — visualising what distinguishes, e.g., Impressionism from Post-Impressionism in the model's representation
+
+Heatmaps are saved to `results/gradcam/` with naming convention `gradcam_<class>_<correct|wrong>_<id>.png`.
+
+---
+
 ## 🤝 Git Workflow
 
-1. Each member works on a dedicated branch: `feature/<topic>` (e.g. `feature/transfer-learning`)
+1. Each member works on a dedicated branch: `feature/<topic>` (e.g. `feature/transfer-learning`, `feature/vit`, `feature/gradcam`)
 2. Open a Pull Request into `main` when a milestone is complete
 3. **Miguel** reviews and merges all PRs
 4. Commit messages follow the format: `[Goncalo] Add custom CNN with BN and dropout`
@@ -165,6 +194,8 @@ Key dependencies (see `requirements.txt` for pinned versions):
 
 - `tensorflow >= 2.10`
 - `keras`
+- `keras-cv`              — ViT pretrained weights
+- `tf-keras-vis`          — Grad-CAM heatmap generation
 - `numpy`
 - `pandas`
 - `matplotlib`
