@@ -49,8 +49,8 @@ def build_custom_model(num_classes, input_shape=(224, 224, 3),
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
+        loss='categorical_crossentropy',
+        metrics=['accuracy', tf.keras.metrics.F1Score(average='macro', name='f1_macro')]
     )
 
     return model
