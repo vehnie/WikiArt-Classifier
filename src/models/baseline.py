@@ -32,5 +32,5 @@ def build_baseline_model(num_classes, input_shape=(224, 224, 3)):
         layers.Dropout(0.5), # Regularization to prevent overfitting
         layers.Dense(num_classes, activation='softmax')
     ])
-    
+
     return model
