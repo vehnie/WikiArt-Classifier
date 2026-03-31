@@ -62,9 +62,9 @@ def create_splits(df, splits_dir="data/splits",
     # save
     out = Path(splits_dir)
     out.mkdir(parents=True, exist_ok=True)
-    train_df.to_csv(out / "train.csv", index=False)
-    val_df.to_csv(out / "val.csv", index=False)
-    test_df.to_csv(out / "test.csv", index=False)
+    train_df.to_csv(out / "train.csv", index=False, encoding="utf-8-sig")
+    val_df.to_csv(out / "val.csv", index=False, encoding="utf-8-sig")
+    test_df.to_csv(out / "test.csv", index=False, encoding="utf-8-sig")
 
     print(f"Splits saved -> train: {len(train_df)}, val: {len(val_df)}, test: {len(test_df)}")
     return train_df, val_df, test_df
@@ -103,9 +103,9 @@ def build_datasets(splits_dir="data/splits", img_size=IMG_SIZE, batch_size=32,
     import tensorflow as tf  # lazy import so the rest of the file works without tf
 
     splits_path = Path(splits_dir)
-    train_df = pd.read_csv(splits_path / "train.csv")
-    val_df   = pd.read_csv(splits_path / "val.csv")
-    test_df  = pd.read_csv(splits_path / "test.csv")
+    train_df = pd.read_csv(splits_path / "train.csv", encoding="utf-8-sig")
+    val_df   = pd.read_csv(splits_path / "val.csv",   encoding="utf-8-sig")
+    test_df  = pd.read_csv(splits_path / "test.csv",  encoding="utf-8-sig")
     num_classes = train_df["label"].nunique()
 
     # optionally point filepaths to the pre-resized images
@@ -132,8 +132,10 @@ def build_datasets(splits_dir="data/splits", img_size=IMG_SIZE, batch_size=32,
         return img, label
 
     def make_dataset(dataframe, shuffle=False, do_augment=False):
+        # resolve paths to absolute form so TF gets clean UTF-8 strings
+        filepaths = [str(Path(p).resolve()) for p in dataframe["filepath"].values]
         ds = tf.data.Dataset.from_tensor_slices(
-            (dataframe["filepath"].values, dataframe["label"].values)
+            (filepaths, dataframe["label"].values)
         )
         if shuffle:
             ds = ds.shuffle(len(dataframe), seed=SEED)
