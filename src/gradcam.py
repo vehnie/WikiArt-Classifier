@@ -77,28 +77,42 @@ def make_gradcam_heatmap(model, img_array, target_class=None, last_conv_layer_na
     if last_conv_layer_name is None:
         last_conv_layer_name = find_last_conv_layer(model)
 
-    # Handle nested layer names (e.g. "resnet50/conv5_block3_3_conv")
-    if "/" in last_conv_layer_name:
-        parent_name, sub_name = last_conv_layer_name.split("/", 1)
-        parent_layer = model.get_layer(parent_name)
-        conv_layer = parent_layer.get_layer(sub_name)
-        # Build a sub-model that outputs the conv layer activations
-        sub_model = tf.keras.Model(
-            parent_layer.input, conv_layer.output, name="conv_extractor"
-        )
-        # Build the grad model
-        grad_model = tf.keras.Model(
-            model.input,
-            [sub_model(model.get_layer(parent_name).input), model.output],
-        )
-    else:
-        grad_model = tf.keras.Model(
-            model.input,
-            [model.get_layer(last_conv_layer_name).output, model.output],
-        )
+    # Manual forward pass: run layers up to and including the target conv layer,
+    # then continue to the output. This avoids Model() wrapper issues with
+    # Sequential models in Keras 3.
+    target_layer_name = last_conv_layer_name
+    is_nested = "/" in target_layer_name
+    if is_nested:
+        parent_name, sub_name = target_layer_name.split("/", 1)
+
+    img_tensor = tf.cast(img_array, tf.float32)
 
     with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(img_array)
+        x = img_tensor
+        conv_outputs = None
+
+        for layer in model.layers:
+            if isinstance(layer, tf.keras.layers.InputLayer):
+                continue
+
+            if is_nested and layer.name == parent_name:
+                # Run through the nested submodel layer by layer
+                sub_x = x
+                for sub_layer in layer.layers:
+                    if isinstance(sub_layer, tf.keras.layers.InputLayer):
+                        continue
+                    sub_x = sub_layer(sub_x)
+                    if sub_layer.name == sub_name:
+                        conv_outputs = sub_x
+                        tape.watch(conv_outputs)
+                x = sub_x
+            else:
+                x = layer(x)
+                if not is_nested and layer.name == target_layer_name:
+                    conv_outputs = x
+                    tape.watch(conv_outputs)
+
+        predictions = x
         if target_class is None:
             target_class = tf.argmax(predictions[0])
         class_score = predictions[:, target_class]
