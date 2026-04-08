@@ -39,6 +39,7 @@ def main():
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate (custom_cnn)')
     parser.add_argument('--dropout', type=float, default=0.3, help='Dropout rate (custom_cnn)')
     parser.add_argument('--filters', type=int, default=32, help='Initial number of filters (custom_cnn)')
+    parser.add_argument('--output_dir', type=str, default='results', help='Output directory for models and logs')
     args = parser.parse_args()
 
     # 2. Load datasets
@@ -96,16 +97,18 @@ def main():
         )
 
     # 5. Callbacks
-    os.makedirs('results/logs', exist_ok=True)
+    output_dir = args.output_dir
+    os.makedirs(f'{output_dir}/logs', exist_ok=True)
+    os.makedirs(f'{output_dir}/models', exist_ok=True)
 
     early_stop = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss',
         patience=5,
         restore_best_weights=True
     )
-    csv_logger = tf.keras.callbacks.CSVLogger(f'results/logs/{args.model}.csv')
+    csv_logger = tf.keras.callbacks.CSVLogger(f'{output_dir}/logs/{args.model}.csv')
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
-        filepath=f'results/logs/{args.model}_best.keras',
+        filepath=f'{output_dir}/models/{args.model}_best.keras',
         monitor='val_loss',
         save_best_only=True,
         verbose=1
@@ -121,8 +124,7 @@ def main():
     )
 
     # 7. Save the final model
-    os.makedirs('results/models', exist_ok=True)
-    model_path = f'results/models/{args.model}.keras'
+    model_path = f'{output_dir}/models/{args.model}.keras'
     model.save(model_path)
     print(f" Model saved to {model_path}")
 
