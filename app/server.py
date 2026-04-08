@@ -70,8 +70,11 @@ def load_model(model_path):
     print(f"Loading model from {model_path}...")
     tf.keras.backend.clear_session()
 
-    # Transfer learning models use a Lambda layer wrapping resnet50.preprocess_input
-    # which Keras can't deserialize without the custom object scope
+    # Register custom objects needed to load saved models:
+    # - transfer model: Lambda wrapping resnet50.preprocess_input
+    # - vit model: CosineWarmup LR schedule (registered via import)
+    from src.models.vit import cosine_decay_with_warmup  # noqa: F401
+
     custom_objects = {
         "preprocess_input": tf.keras.applications.resnet50.preprocess_input,
     }

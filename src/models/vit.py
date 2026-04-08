@@ -33,6 +33,7 @@ def cosine_decay_with_warmup(total_steps, warmup_steps, learning_rate):
     tf.keras.optimizers.schedules.LearningRateSchedule
     """
 
+    @tf.keras.saving.register_keras_serializable(package="wikiart")
     class CosineWarmup(tf.keras.optimizers.schedules.LearningRateSchedule):
         def __init__(self, total_steps, warmup_steps, peak_lr):
             super().__init__()
