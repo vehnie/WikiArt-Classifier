@@ -25,12 +25,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from data_loader import build_datasets
 from models.baseline import build_baseline_model
 from models.custom_cnn import build_custom_model
+from models.transfer import build_transfer_model
 from models.vit import build_vit_model
 
 def main():
     # 1. Read command-line arguments
     parser = argparse.ArgumentParser(description='WikiArt Training Pipeline')
-    parser.add_argument('--model', type=str, default='baseline', help='baseline, custom_cnn, or vit')
+    parser.add_argument('--model', type=str, default='baseline', help='baseline, custom_cnn, transfer, or vit')
     parser.add_argument('--epochs', type=int, default=30, help='Max number of epochs')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
     
@@ -67,6 +68,15 @@ def main():
             num_filters=args.filters
         )
 
+    elif args.model == 'transfer':
+        print(f"\n--- Training Transfer Learning / ResNet50 (lr={args.lr}, dropout={args.dropout}) ---")
+        model = build_transfer_model(
+            num_classes=num_classes,
+            learning_rate=args.lr,
+            dropout_rate=args.dropout,
+            fine_tune=True,
+        )
+
     elif args.model == 'vit':
         print(f"\n--- Training ViT-B/16 (lr={args.lr}, dropout={args.dropout}) ---")
         model = build_vit_model(
@@ -78,7 +88,7 @@ def main():
         raise ValueError(f"Model {args.model} not recognized.")
 
     # 4. Compile the model (skip for custom_cnn — already compiled inside build_custom_model)
-    if args.model not in ('custom_cnn', 'vit'):
+    if args.model not in ('custom_cnn', 'transfer', 'vit'):
         model.compile(
             optimizer='adam',
             loss='categorical_crossentropy',
