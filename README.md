@@ -146,6 +146,13 @@ Fine-tuned pretrained Vision Transformer (ViT-B/16) with a custom classification
 
 All models are evaluated on the held-out test set (2,002 images) using accuracy, F1-macro, per-class metrics, normalised confusion matrices, and learning curves.
 
+| Model | Accuracy | F1-Macro | Parameters |
+|-------|----------|----------|------------|
+| Baseline CNN | 36.1% | 30.1% | 23.9M |
+| Custom CNN | 54.9% | 50.0% | 1.2M |
+| Transfer Learning (ResNet50) | 74.5% | 72.2% | 24.6M |
+| **ViT-B/16** | **86.0%** | **85.0%** | **85.8M** |
+
 ### Cross-Model Comparison
 <p align="center">
   <img src="results/figures/model_comparison.png" width="600">
