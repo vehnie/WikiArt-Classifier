@@ -164,7 +164,8 @@ def make_gradcam_heatmap_vit(model, img_array, target_class=None, backbone_layer
 
     backbone_layer = model.get_layer(backbone_layer_name)
 
-    # Manual forward pass so we can watch the backbone output tensor
+    # Manual forward pass: watch the input to the backbone so gradients
+    # flow through the backbone itself (not just through CLS extraction).
     img_tensor = tf.cast(img_array, tf.float32)
 
     with tf.GradientTape() as tape:
@@ -176,12 +177,14 @@ def make_gradcam_heatmap_vit(model, img_array, target_class=None, backbone_layer
             if not isinstance(layer, tf.keras.layers.InputLayer):
                 x = layer(x)
 
-        # Run backbone and watch its output
-        backbone_output = backbone_layer(x)
-        tape.watch(backbone_output)
+        # Watch the backbone INPUT so gradients flow through all internal
+        # attention layers, not just through the CLS token extraction
+        backbone_input = tf.identity(x)
+        tape.watch(backbone_input)
 
-        # Run layers after backbone (CLS extraction, dropout, dense)
-        # CLS token extraction: backbone_output[:, 0, :]
+        backbone_output = backbone_layer(backbone_input)
+
+        # CLS token extraction + classification head
         x = backbone_output[:, 0, :]
         found_backbone = False
         for layer in model.layers:
@@ -196,21 +199,19 @@ def make_gradcam_heatmap_vit(model, img_array, target_class=None, backbone_layer
             target_class = tf.argmax(predictions[0])
         class_score = predictions[:, target_class]
 
-    grads = tape.gradient(class_score, backbone_output)
+    # Gradient w.r.t. backbone input: shape (1, 224, 224, 3)
+    # This tells us which spatial regions of the input matter most
+    grads = tape.gradient(class_score, backbone_input)
 
-    # Exclude CLS token (index 0), keep patch tokens
-    patch_grads = grads[:, 1:, :]
-    patch_tokens = backbone_output[:, 1:, :]
+    # Compute spatial importance by taking the L2 norm across channels
+    heatmap = tf.reduce_sum(tf.square(grads[0]), axis=-1)  # (224, 224)
 
-    # Weight each token by mean gradient magnitude
-    weights = tf.reduce_mean(patch_grads, axis=-1)  # (1, num_patches)
-    weighted = tf.reduce_sum(patch_tokens[0] * weights[0, :, tf.newaxis], axis=-1)  # (num_patches,)
+    # Downsample to patch grid (14x14) by averaging over 16x16 blocks
+    heatmap = tf.reshape(heatmap, (14, 16, 14, 16))
+    heatmap = tf.reduce_mean(heatmap, axis=(1, 3))  # (14, 14)
 
-    # Reshape to spatial grid (ViT-B/16 with 224x224 input -> 14x14 patches)
-    num_patches = weighted.shape[0]
-    grid_size = int(np.sqrt(num_patches))
-    heatmap = tf.reshape(weighted, (grid_size, grid_size))
-    heatmap = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + 1e-8)
+    # Normalise to [0, 1]
+    heatmap = heatmap / (tf.math.reduce_max(heatmap) + 1e-8)
 
     predicted_class = int(tf.argmax(predictions[0]).numpy())
     confidence = float(predictions[0, predicted_class].numpy())
