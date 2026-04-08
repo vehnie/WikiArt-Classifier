@@ -122,7 +122,7 @@ def main():
 
     # 7. Save the final model
     os.makedirs('results/models', exist_ok=True)
-    model_path = f'results/models/{args.model}_cnn.keras'
+    model_path = f'results/models/{args.model}.keras'
     model.save(model_path)
     print(f" Model saved to {model_path}")
 
