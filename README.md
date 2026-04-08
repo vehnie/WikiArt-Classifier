@@ -61,9 +61,9 @@ dl-project/
 └── .gitignore
 ```
 
-> **Note:** The `data/raw/` and `data/processed/` folders are gitignored. Raw images should be obtained from the course-provided link or shared drive. Only the split CSVs in `data/splits/` are versioned.
->
-> **Trained models** are too large for Git (2.3 GB total). Download them from **[Google Drive](https://drive.google.com/drive/folders/13It4uxPjX04n1Y3d-Inemh9AROe_Bsw8?usp=sharing)** and place the `.keras` files in `results/models/`.
+> **Note:** The `data/raw/` and `data/processed/` folders are gitignored. Only the split CSVs in `data/splits/` are versioned. Both the **dataset** and **trained models** are available on **[Google Drive](https://drive.google.com/drive/folders/13It4uxPjX04n1Y3d-Inemh9AROe_Bsw8?usp=sharing)**:
+> - Download the dataset `.zip`, extract it, and place the artist folders in `data/raw/`
+> - Download the `.keras` model files and place them in `results/models/`
 
 ---
 
@@ -113,11 +113,11 @@ pip install -r requirements.txt
 ```
 
 ### 3. Prepare the data
-Place the raw WikiArt images in `data/raw/`, then run the preprocessing script:
+Download the dataset `.zip` from [Google Drive](https://drive.google.com/drive/folders/13It4uxPjX04n1Y3d-Inemh9AROe_Bsw8?usp=sharing), extract it, and place the artist folders in `data/raw/` (e.g. `data/raw/Albrecht_Durer/`, `data/raw/Claude_Monet/`, ...). Then run the preprocessing script:
 ```bash
 python src/data_loader.py --input data/raw/ --output data/processed/
 ```
-This will generate the split CSVs in `data/splits/`.
+This will resize images to 224x224 and generate the split CSVs in `data/splits/`.
 
 ### 4. Train a model
 ```bash
