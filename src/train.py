@@ -25,13 +25,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from data_loader import build_datasets
 from models.baseline import build_baseline_model
 from models.custom_cnn import build_custom_model
+from models.vit import build_vit_model
 
 def main():
     # 1. Read command-line arguments
     parser = argparse.ArgumentParser(description='WikiArt Training Pipeline')
-    parser.add_argument('--model', type=str, default='baseline', help='baseline or custom_cnn')
+    parser.add_argument('--model', type=str, default='baseline', help='baseline, custom_cnn, or vit')
     parser.add_argument('--epochs', type=int, default=30, help='Max number of epochs')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
+    
     # Custom CNN hyperparameters (defaults used when not specified)
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate (custom_cnn)')
     parser.add_argument('--dropout', type=float, default=0.3, help='Dropout rate (custom_cnn)')
@@ -64,11 +66,19 @@ def main():
             dropout_rate=args.dropout,
             num_filters=args.filters
         )
+
+    elif args.model == 'vit':
+        print(f"\n--- Training ViT-B/16 (lr={args.lr}, dropout={args.dropout}) ---")
+        model = build_vit_model(
+            num_classes=num_classes,
+            learning_rate=args.lr,
+            dropout_rate=args.dropout,
+        )
     else:
         raise ValueError(f"Model {args.model} not recognized.")
 
     # 4. Compile the model (skip for custom_cnn — already compiled inside build_custom_model)
-    if args.model != 'custom_cnn':
+    if args.model not in ('custom_cnn', 'vit'):
         model.compile(
             optimizer='adam',
             loss='categorical_crossentropy',
