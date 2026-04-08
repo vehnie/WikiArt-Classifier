@@ -37,8 +37,15 @@ Thumbs.db
 *.hdf5
 *.keras
 
-# Report (compiled locally, not tracked)
-report/
+# Report (only track the PDF, ignore LaTeX build artifacts)
+report/*.tex
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.synctex*
+report/*.fls
+report/*.fdb_latexmk
 
 # Claude
 CLAUDE.md

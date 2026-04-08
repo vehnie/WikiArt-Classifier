@@ -2,6 +2,8 @@
 
 A deep learning image classification system built on a subset of the **WikiArt** dataset, implemented in **Keras**. The project explores and compares multiple architectures — from custom CNNs and fine-tuned pretrained models to a Vision Transformer (ViT) — with a rigorous evaluation framework and Grad-CAM explainability analysis.
 
+> 📄 **[Read the full report (PDF)](report/report.pdf)**
+
 ### Sample paintings from the dataset
 <p align="center">
   <img src="results/figures/sample_images_per_artist.png" width="700">
