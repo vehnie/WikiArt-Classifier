@@ -57,6 +57,8 @@ dl-project/
 ```
 
 > **Note:** The `data/raw/` and `data/processed/` folders are gitignored. Raw images should be obtained from the course-provided link or shared drive. Only the split CSVs in `data/splits/` are versioned.
+>
+> **Trained models** are too large for Git (2.3 GB total). Download them from **[Google Drive](https://drive.google.com/drive/folders/13It4uxPjX04n1Y3d-Inemh9AROe_Bsw8?usp=sharing)** and place the `.keras` files in `results/models/`.
 
 ---
 
