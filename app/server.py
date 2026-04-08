@@ -69,7 +69,15 @@ def load_model(model_path):
     global model, current_model_name
     print(f"Loading model from {model_path}...")
     tf.keras.backend.clear_session()
-    model = tf.keras.models.load_model(model_path)
+
+    # Transfer learning models use a Lambda layer wrapping resnet50.preprocess_input
+    # which Keras can't deserialize without the custom object scope
+    custom_objects = {
+        "preprocess_input": tf.keras.applications.resnet50.preprocess_input,
+    }
+    with tf.keras.utils.custom_object_scope(custom_objects):
+        model = tf.keras.models.load_model(model_path)
+
     current_model_name = os.path.basename(model_path)
     print(f"Model loaded — {current_model_name} ({model.count_params():,} parameters)")
 
