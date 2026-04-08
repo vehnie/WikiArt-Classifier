@@ -37,5 +37,8 @@ Thumbs.db
 *.hdf5
 *.keras
 
+# Report (compiled locally, not tracked)
+report/
+
 # Claude
 CLAUDE.md

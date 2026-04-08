@@ -148,9 +148,9 @@ All models are evaluated on the held-out test set (2,002 images) using accuracy,
 
 | Model | Accuracy | F1-Macro | Parameters |
 |-------|----------|----------|------------|
-| Baseline CNN | 36.1% | 30.1% | 23.9M |
+| Baseline CNN | 36.1% | 30.1% | 6.8M |
 | Custom CNN | 54.9% | 50.0% | 1.2M |
-| Transfer Learning (ResNet50) | 74.5% | 72.2% | 24.6M |
+| Transfer Learning (ResNet50) | 74.5% | 72.2% | 25.6M |
 | **ViT-B/16** | **86.0%** | **85.0%** | **85.8M** |
 
 ### Cross-Model Comparison
