@@ -128,6 +128,10 @@ def make_gradcam_heatmap_vit(model, img_array, target_class=None, backbone_layer
     Uses the gradient of the target class w.r.t. the backbone's patch token
     outputs (excluding CLS), reshaped to a spatial grid.
 
+    Instead of building a secondary Model (which fails due to tensor tracing
+    issues with nested ViT submodels), we manually run the forward pass
+    layer-by-layer and watch the backbone output with GradientTape.
+
     Parameters
     ----------
     model : tf.keras.Model
@@ -146,13 +150,34 @@ def make_gradcam_heatmap_vit(model, img_array, target_class=None, backbone_layer
 
     backbone_layer = model.get_layer(backbone_layer_name)
 
-    grad_model = tf.keras.Model(
-        model.input,
-        [backbone_layer.output, model.output],
-    )
+    # Manual forward pass so we can watch the backbone output tensor
+    img_tensor = tf.cast(img_array, tf.float32)
 
     with tf.GradientTape() as tape:
-        backbone_output, predictions = grad_model(img_array)
+        # Run layers before backbone
+        x = img_tensor
+        for layer in model.layers:
+            if layer.name == backbone_layer_name:
+                break
+            if not isinstance(layer, tf.keras.layers.InputLayer):
+                x = layer(x)
+
+        # Run backbone and watch its output
+        backbone_output = backbone_layer(x)
+        tape.watch(backbone_output)
+
+        # Run layers after backbone (CLS extraction, dropout, dense)
+        # CLS token extraction: backbone_output[:, 0, :]
+        x = backbone_output[:, 0, :]
+        found_backbone = False
+        for layer in model.layers:
+            if layer.name == backbone_layer_name:
+                found_backbone = True
+                continue
+            if found_backbone and not isinstance(layer, tf.keras.layers.InputLayer):
+                x = layer(x)
+
+        predictions = x
         if target_class is None:
             target_class = tf.argmax(predictions[0])
         class_score = predictions[:, target_class]
