@@ -12,11 +12,12 @@ Improvements over baseline ViT training:
 """
 
 import math
+import keras
 import tensorflow as tf
 import keras_hub
 
 
-@tf.keras.saving.register_keras_serializable(package="wikiart")
+@keras.saving.register_keras_serializable(package="wikiart")
 class CosineWarmup(tf.keras.optimizers.schedules.LearningRateSchedule):
     """Cosine decay learning rate schedule with linear warmup."""
 
