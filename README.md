@@ -43,6 +43,11 @@ dl-project/
 │   ├── logs/                       # Training history CSVs
 │   └── models/                     # Saved model checkpoints (.keras)
 │
+├── app/
+│   ├── server.py                   # Flask backend for prediction API (Miguel)
+│   └── static/
+│       └── index.html              # Web frontend with drag-and-drop upload
+│
 ├── report/
 │   └── report.pdf                  # Final 7-page report (Henrique)
 │
@@ -125,6 +130,12 @@ python src/evaluate.py --model vit --checkpoint results/models/vit.keras
 python src/gradcam.py --model vit --checkpoint results/models/vit.keras --output results/gradcam/
 ```
 
+### 7. Launch the web app
+```bash
+python app/server.py
+```
+Open http://127.0.0.1:5000 — drag & drop paintings to predict the artist. Use the dropdown to switch between all trained models (Baseline CNN, Custom CNN, Transfer/ResNet50, ViT).
+
 ---
 
 ## 🏗️ Models Overview
@@ -167,6 +178,26 @@ This is applied to:
 - **Cross-class comparisons** — visualising what distinguishes, e.g., Impressionism from Post-Impressionism in the model's representation
 
 Heatmaps are saved to `results/gradcam/` with naming convention `gradcam_<class>_<correct|wrong>_<id>.png`.
+
+---
+
+## 🖥️ Web App — Interactive Classifier (Miguel)
+
+A Flask-based web application for interactive artist prediction. Upload one or more paintings and get instant top-5 predictions with confidence scores.
+
+**Features:**
+- Drag-and-drop multi-image upload (JPG, PNG, BMP, TIFF)
+- **Model selector** — switch between all trained models at runtime (Baseline CNN, Custom CNN, Transfer/ResNet50, ViT)
+- Top-5 predictions per image with confidence bars
+- Dark-themed responsive UI
+
+**Run locally:**
+```bash
+python app/server.py                              # default: ViT model, port 5000
+python app/server.py --model results/models/custom_cnn.keras --port 8080
+```
+
+**Architecture:** `app/server.py` (Flask backend with `/predict` and `/models/switch` endpoints) + `app/static/index.html` (vanilla HTML/CSS/JS frontend, no build step).
 
 ---
 
