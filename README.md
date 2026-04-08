@@ -234,7 +234,18 @@ python app/server.py --model results/models/custom_cnn.keras --port 8080
 **Architecture:** `app/server.py` (Flask backend with `/predict` and `/models/switch` endpoints) + `app/static/index.html` (vanilla HTML/CSS/JS frontend, no build step).
 
 <p align="center">
-  <img src="results/figures/webapp_screenshot.png" width="700">
+  <img src="assets/webapp1.png" width="700"><br>
+  <em>Upload paintings and get instant predictions with confidence scores</em>
+</p>
+
+<p align="center">
+  <img src="assets/webapp2.png" width="700"><br>
+  <em>Batch predictions with top-5 artists per image</em>
+</p>
+
+<p align="center">
+  <img src="assets/webapp3.png" width="700"><br>
+  <em>Switch between all trained models at runtime</em>
 </p>
 
 ---
