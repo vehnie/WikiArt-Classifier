@@ -39,8 +39,9 @@ dl-project/
 │
 ├── results/
 │   ├── figures/                    # All plots and visualisations (Leonor)
-│   ├── gradcam/                    # Grad-CAM heatmaps per class (Miguel) 
-│   └── logs/                       # Training history CSVs / TensorBoard logs
+│   ├── gradcam/                    # Grad-CAM heatmaps per class (Miguel)
+│   ├── logs/                       # Training history CSVs
+│   └── models/                     # Saved model checkpoints (.keras)
 │
 ├── report/
 │   └── report.pdf                  # Final 7-page report (Henrique)
@@ -107,8 +108,8 @@ python src/train.py --model baseline --epochs 30
 # Custom CNN
 python src/train.py --model custom_cnn --epochs 50
 
-# Transfer learning (EfficientNetV2)
-python src/train.py --model transfer --backbone efficientnetv2 --epochs 20
+# Transfer learning (ResNet50)
+python src/train.py --model transfer --epochs 20 --lr 1e-5 --dropout 0.5
 
 # Vision Transformer (ViT-B/16 fine-tuned)
 python src/train.py --model vit --epochs 20
@@ -116,12 +117,12 @@ python src/train.py --model vit --epochs 20
 
 ### 5. Evaluate
 ```bash
-python src/evaluate.py --model transfer --checkpoint results/logs/transfer_best.h5
+python src/evaluate.py --model vit --checkpoint results/models/vit.keras
 ```
 
 ### 6. Generate Grad-CAM heatmaps
 ```bash
-python src/gradcam.py --model vit --checkpoint results/logs/vit_best.h5 --output results/gradcam/
+python src/gradcam.py --model vit --checkpoint results/models/vit.keras --output results/gradcam/
 ```
 
 ---
@@ -135,10 +136,10 @@ A shallow convolutional network used as a performance floor. Establishes the tra
 A deeper architecture with multiple Conv blocks, Batch Normalisation, and Dropout, designed and tuned specifically for the WikiArt classification task.
 
 ### Transfer Learning (Anastasiia)
-Fine-tuned pretrained backbone (EfficientNetV2 or ResNet50) with a custom classification head. Experiments cover both feature-extraction mode and full fine-tuning, combined with an augmentation pipeline (random crop, horizontal flip, colour jitter).
+Fine-tuned pretrained ResNet50 backbone with a custom classification head. Five experiments varying fine-tuning depth (5–10 layers), learning rate (1e-3, 1e-5), and dropout (0.4–0.6). Uses ImageNet preprocessing, EarlyStopping, ReduceLROnPlateau, and the shared augmentation pipeline.
 
-### Vision Transformer — ViT-B/16 (Miguel) 
-Fine-tuned pretrained Vision Transformer (ViT-B/16) with a custom classification head. The image is split into 16×16 patches, each treated as a token fed into multi-head self-attention blocks — allowing the model to capture long-range compositional relationships across a painting that CNNs inherently miss. Implemented natively in Keras using `layers.MultiHeadAttention`, with weights initialised from ImageNet-21K pretraining.
+### Vision Transformer — ViT-B/16 (Miguel)
+Fine-tuned pretrained Vision Transformer (ViT-B/16) with a custom classification head. The image is split into 16×16 patches, each treated as a token fed into multi-head self-attention blocks — allowing the model to capture long-range compositional relationships across a painting that CNNs inherently miss. Loaded via `keras-hub` from ImageNet-21K pretrained weights. Training uses AdamW with weight decay, cosine LR schedule with linear warmup, label smoothing, and an intermediate Dense(256, GELU) layer before the classifier.
 
 ---
 
@@ -152,7 +153,7 @@ All models are evaluated on the held-out test set using:
 - **Learning curves** — training vs. validation loss/accuracy
 - **Error analysis** — qualitative review of misclassified samples
 
-All figures are saved to `results/figures/` with descriptive names (e.g. `confusion_matrix_efficientnet_normalised.png`) for direct use in the report.
+All figures are saved to `results/figures/` with descriptive names (e.g. `vit_confusion_matrix_normalised.png`) for direct use in the report.
 
 ---
 
@@ -190,12 +191,12 @@ Heatmaps are saved to `results/gradcam/` with naming convention `gradcam_<class>
 
 ## ⚙️ Requirements
 
-Key dependencies (see `requirements.txt` for pinned versions):
+Key dependencies (see `requirements.txt` for full list):
 
 - `tensorflow >= 2.10`
 - `keras`
-- `keras-cv`              — ViT pretrained weights
-- `tf-keras-vis`          — Grad-CAM heatmap generation
+- `keras-hub`             — ViT pretrained weights (ImageNet-21K)
+- `keras-tuner`           — Hyperparameter search (Custom CNN)
 - `numpy`
 - `pandas`
 - `matplotlib`
