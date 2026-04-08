@@ -16,48 +16,36 @@ import tensorflow as tf
 import keras_hub
 
 
+@tf.keras.saving.register_keras_serializable(package="wikiart")
+class CosineWarmup(tf.keras.optimizers.schedules.LearningRateSchedule):
+    """Cosine decay learning rate schedule with linear warmup."""
+
+    def __init__(self, total_steps, warmup_steps, peak_lr):
+        super().__init__()
+        self.total_steps = float(total_steps)
+        self.warmup_steps = float(warmup_steps)
+        self.peak_lr = peak_lr
+
+    def __call__(self, step):
+        step = tf.cast(step, tf.float32)
+        # Linear warmup
+        warmup_lr = self.peak_lr * (step / tf.maximum(self.warmup_steps, 1.0))
+        # Cosine decay
+        decay_steps = tf.maximum(self.total_steps - self.warmup_steps, 1.0)
+        progress = (step - self.warmup_steps) / decay_steps
+        cosine_lr = self.peak_lr * 0.5 * (1.0 + tf.cos(math.pi * progress))
+        return tf.where(step < self.warmup_steps, warmup_lr, cosine_lr)
+
+    def get_config(self):
+        return {
+            "total_steps": self.total_steps,
+            "warmup_steps": self.warmup_steps,
+            "peak_lr": self.peak_lr,
+        }
+
+
 def cosine_decay_with_warmup(total_steps, warmup_steps, learning_rate):
-    """Create a cosine decay schedule with linear warmup.
-
-    Parameters
-    ----------
-    total_steps : int
-        Total number of training steps.
-    warmup_steps : int
-        Number of warmup steps (linear ramp from 0 to peak LR).
-    learning_rate : float
-        Peak learning rate after warmup.
-
-    Returns
-    -------
-    tf.keras.optimizers.schedules.LearningRateSchedule
-    """
-
-    @tf.keras.saving.register_keras_serializable(package="wikiart")
-    class CosineWarmup(tf.keras.optimizers.schedules.LearningRateSchedule):
-        def __init__(self, total_steps, warmup_steps, peak_lr):
-            super().__init__()
-            self.total_steps = float(total_steps)
-            self.warmup_steps = float(warmup_steps)
-            self.peak_lr = peak_lr
-
-        def __call__(self, step):
-            step = tf.cast(step, tf.float32)
-            # Linear warmup
-            warmup_lr = self.peak_lr * (step / tf.maximum(self.warmup_steps, 1.0))
-            # Cosine decay
-            decay_steps = tf.maximum(self.total_steps - self.warmup_steps, 1.0)
-            progress = (step - self.warmup_steps) / decay_steps
-            cosine_lr = self.peak_lr * 0.5 * (1.0 + tf.cos(math.pi * progress))
-            return tf.where(step < self.warmup_steps, warmup_lr, cosine_lr)
-
-        def get_config(self):
-            return {
-                "total_steps": self.total_steps,
-                "warmup_steps": self.warmup_steps,
-                "peak_lr": self.peak_lr,
-            }
-
+    """Create a CosineWarmup schedule instance."""
     return CosineWarmup(total_steps, warmup_steps, learning_rate)
 
 

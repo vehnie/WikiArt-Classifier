@@ -73,7 +73,7 @@ def load_model(model_path):
     # Register custom objects needed to load saved models:
     # - transfer model: Lambda wrapping resnet50.preprocess_input
     # - vit model: CosineWarmup LR schedule (registered via import)
-    from src.models.vit import cosine_decay_with_warmup  # noqa: F401
+    from src.models.vit import CosineWarmup  # noqa: F401 — registers with Keras
 
     custom_objects = {
         "preprocess_input": tf.keras.applications.resnet50.preprocess_input,
