@@ -2,6 +2,7 @@ tensorflow>=2.10
 keras
 keras-hub
 keras-tuner
+flask
 numpy
 pandas
 matplotlib

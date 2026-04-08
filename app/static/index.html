@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WikiArt Painting Classifier</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        /* Drop zone */
+        .dropzone {
+            border: 2px dashed #333;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #1a1a1a;
+            margin-bottom: 1.5rem;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: #646cff;
+            background: #1e1e2e;
+        }
+
+        .dropzone-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .dropzone-text {
+            font-size: 1.1rem;
+            color: #aaa;
+            margin-bottom: 0.5rem;
+        }
+
+        .dropzone-hint {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .dropzone input[type="file"] {
+            display: none;
+        }
+
+        /* Preview grid */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #1a1a1a;
+            aspect-ratio: 1;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Buttons */
+        .actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #646cff;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #535bf2;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #2a2a2a;
+            color: #ccc;
+        }
+
+        .btn-secondary:hover {
+            background: #333;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: #888;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #333;
+            border-top-color: #646cff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-section h2 {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+
+        .result-card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1.25rem;
+            align-items: flex-start;
+        }
+
+        .result-card img {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .result-filename {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 0.4rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .result-top {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-top .confidence {
+            font-weight: 400;
+            color: #646cff;
+            font-size: 0.95rem;
+        }
+
+        .prediction-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .prediction-row .artist-name {
+            width: 160px;
+            flex-shrink: 0;
+            text-align: right;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .bar-bg {
+            flex: 1;
+            height: 18px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #646cff;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .bar-fill.top {
+            background: #646cff;
+        }
+
+        .prediction-row .pct {
+            width: 45px;
+            text-align: right;
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .result-error {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: #444;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            .result-card { flex-direction: column; }
+            .result-card img { width: 100%; height: 200px; }
+            .prediction-row .artist-name { width: 120px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>WikiArt Painting Classifier</h1>
+            <p>Upload paintings to predict the artist using our ViT-B/16 deep learning model</p>
+        </header>
+
+        <!-- Drop zone -->
+        <div class="dropzone" id="dropzone">
+            <div class="dropzone-icon">&#128444;</div>
+            <div class="dropzone-text">Drag & drop paintings here, or click to browse</div>
+            <div class="dropzone-hint">Supports JPG, PNG, BMP, TIFF</div>
+            <input type="file" id="fileInput" multiple accept="image/*">
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-grid" id="previewGrid"></div>
+
+        <!-- Actions -->
+        <div class="actions" id="actions" style="display: none;">
+            <button class="btn btn-primary" id="predictBtn" onclick="predict()">
+                Predict Artists
+            </button>
+            <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <span class="spinner"></span> Analysing paintings...
+        </div>
+
+        <!-- Results -->
+        <div class="results-section" id="resultsSection">
+            <h2>Predictions</h2>
+            <div id="resultsContainer"></div>
+        </div>
+
+        <footer>
+            WikiArt Painting Classifier &mdash; NOVA IMS Deep Learning 2025/2026
+        </footer>
+    </div>
+
+    <script>
+        let selectedFiles = [];
+
+        // --- Drop zone ---
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            addFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            addFiles(fileInput.files);
+            fileInput.value = '';
+        });
+
+        function addFiles(fileList) {
+            for (const f of fileList) {
+                if (f.type.startsWith('image/')) {
+                    selectedFiles.push(f);
+                }
+            }
+            renderPreviews();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderPreviews();
+        }
+
+        function renderPreviews() {
+            const grid = document.getElementById('previewGrid');
+            const actions = document.getElementById('actions');
+            grid.innerHTML = '';
+
+            selectedFiles.forEach((f, i) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(f);
+
+                const btn = document.createElement('button');
+                btn.className = 'remove-btn';
+                btn.innerHTML = '&times;';
+                btn.onclick = (e) => { e.stopPropagation(); removeFile(i); };
+
+                div.appendChild(img);
+                div.appendChild(btn);
+                grid.appendChild(div);
+            });
+
+            actions.style.display = selectedFiles.length > 0 ? 'flex' : 'none';
+        }
+
+        function clearAll() {
+            selectedFiles = [];
+            renderPreviews();
+            document.getElementById('resultsSection').classList.remove('active');
+        }
+
+        // --- Prediction ---
+        async function predict() {
+            if (selectedFiles.length === 0) return;
+
+            const btn = document.getElementById('predictBtn');
+            const loading = document.getElementById('loading');
+            const resultsSection = document.getElementById('resultsSection');
+
+            btn.disabled = true;
+            loading.classList.add('active');
+            resultsSection.classList.remove('active');
+
+            const formData = new FormData();
+            selectedFiles.forEach(f => formData.append('images', f));
+
+            try {
+                const response = await fetch('/predict', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    renderResults(data.results);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function renderResults(results) {
+            const container = document.getElementById('resultsContainer');
+            const section = document.getElementById('resultsSection');
+            container.innerHTML = '';
+
+            results.forEach((result, i) => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+
+                // Image thumbnail
+                const img = document.createElement('img');
+                const file = selectedFiles.find(f => f.name === result.filename) || selectedFiles[i];
+                if (file) img.src = URL.createObjectURL(file);
+
+                card.appendChild(img);
+
+                const info = document.createElement('div');
+                info.className = 'result-info';
+
+                if (result.error) {
+                    info.innerHTML = `
+                        <div class="result-filename">${result.filename}</div>
+                        <div class="result-error">Error: ${result.error}</div>
+                    `;
+                } else {
+                    const preds = result.predictions;
+                    const topPred = preds[0];
+
+                    let html = `
+                        <div class="result-filename">${result.filename}</div>
+                        <div class="result-top">
+                            ${topPred.artist}
+                            <span class="confidence">${(topPred.confidence * 100).toFixed(1)}%</span>
+                        </div>
+                    `;
+
+                    preds.forEach((p, j) => {
+                        const pct = (p.confidence * 100).toFixed(1);
+                        const barClass = j === 0 ? 'bar-fill top' : 'bar-fill';
+                        html += `
+                            <div class="prediction-row">
+                                <span class="artist-name">${p.artist}</span>
+                                <div class="bar-bg">
+                                    <div class="${barClass}" style="width: ${pct}%"></div>
+                                </div>
+                                <span class="pct">${pct}%</span>
+                            </div>
+                        `;
+                    });
+
+                    info.innerHTML = html;
+                }
+
+                card.appendChild(info);
+                container.appendChild(card);
+            });
+
+            section.classList.add('active');
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
