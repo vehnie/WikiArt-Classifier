@@ -5,6 +5,11 @@ A deep learning image classification system built on a subset of the **WikiArt**
 
 > **Deadline:** 24 April 2026, 17:00 · **Submission:** Moodle (GROUP_X.rar)
 
+### Sample paintings from the dataset
+<p align="center">
+  <img src="results/figures/sample_images_per_artist.png" width="700">
+</p>
+
 ---
 
 ## 📁 Repository Structure
@@ -71,6 +76,13 @@ dl-project/
 | **Anastasiia** | Transfer Learning Specialist | Pretrained backbones (EfficientNetV2 / ResNet50), fine-tuning, data augmentation pipeline |
 | **Leonor** | Evaluation & Analysis Lead | Metrics (accuracy, F1-macro), confusion matrices, error analysis, all result figures |
 | **Henrique** | Report Writer | Full 7-page report, problem formalisation, methodology narrative, submission formatting |
+
+### Class Distribution
+<p align="center">
+  <img src="results/figures/class_distribution.png" width="600">
+</p>
+
+> 13,340 images across 23 artists with moderate class imbalance (3.9x ratio). F1-macro is the primary metric.
 
 ---
 
@@ -168,6 +180,21 @@ All models are evaluated on the held-out test set using:
 
 All figures are saved to `results/figures/` with descriptive names (e.g. `vit_confusion_matrix_normalised.png`) for direct use in the report.
 
+### Cross-Model Comparison
+<p align="center">
+  <img src="results/figures/model_comparison.png" width="600">
+</p>
+
+### ViT-B/16 — Per-class F1 Score
+<p align="center">
+  <img src="results/figures/vit_per_class_f1.png" width="600">
+</p>
+
+### ViT-B/16 — Normalised Confusion Matrix
+<p align="center">
+  <img src="results/figures/vit_confusion_matrix_normalised.png" width="650">
+</p>
+
 ---
 
 ## 🔍 Explainability — Grad-CAM (Miguel)
@@ -180,6 +207,11 @@ This is applied to:
 - **Cross-class comparisons** — visualising what distinguishes, e.g., Impressionism from Post-Impressionism in the model's representation
 
 Heatmaps are saved to `results/gradcam/` with naming convention `gradcam_<class>_<correct|wrong>_<id>.png`.
+
+### Grad-CAM — Sample Overview
+<p align="center">
+  <img src="results/figures/gradcam_sample_overview.png" width="700">
+</p>
 
 ---
 
@@ -200,6 +232,10 @@ python app/server.py --model results/models/custom_cnn.keras --port 8080
 ```
 
 **Architecture:** `app/server.py` (Flask backend with `/predict` and `/models/switch` endpoints) + `app/static/index.html` (vanilla HTML/CSS/JS frontend, no build step).
+
+<p align="center">
+  <img src="results/figures/webapp_screenshot.png" width="700">
+</p>
 
 ---
 
