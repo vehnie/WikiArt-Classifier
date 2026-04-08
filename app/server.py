@@ -44,19 +44,34 @@ ARTIST_NAMES = [
 # Readable display names
 DISPLAY_NAMES = {name: name.replace("_", " ") for name in ARTIST_NAMES}
 
+MODELS_DIR = os.path.join(PROJECT_ROOT, "results", "models")
+
 app = Flask(__name__, static_folder="static")
 model = None
+current_model_name = None
 
 
 # ---------------------------------------------------------------------------
 # Model loading & prediction
 # ---------------------------------------------------------------------------
 
+def list_available_models():
+    """Scan results/models/ for .keras files and return a list of model names."""
+    models = []
+    if os.path.isdir(MODELS_DIR):
+        for f in sorted(os.listdir(MODELS_DIR)):
+            if f.endswith(".keras"):
+                models.append(f)
+    return models
+
+
 def load_model(model_path):
-    global model
+    global model, current_model_name
     print(f"Loading model from {model_path}...")
+    tf.keras.backend.clear_session()
     model = tf.keras.models.load_model(model_path)
-    print(f"Model loaded — {model.count_params():,} parameters")
+    current_model_name = os.path.basename(model_path)
+    print(f"Model loaded — {current_model_name} ({model.count_params():,} parameters)")
 
 
 def preprocess_image(image_bytes):
@@ -123,6 +138,34 @@ def predict():
 @app.route("/artists")
 def artists():
     return jsonify({"artists": [DISPLAY_NAMES[a] for a in ARTIST_NAMES]})
+
+
+@app.route("/models")
+def models_list():
+    available = list_available_models()
+    return jsonify({
+        "models": available,
+        "current": current_model_name,
+    })
+
+
+@app.route("/models/switch", methods=["POST"])
+def switch_model():
+    data = request.get_json()
+    if not data or "model" not in data:
+        return jsonify({"error": "Missing 'model' field"}), 400
+
+    filename = data["model"]
+    available = list_available_models()
+    if filename not in available:
+        return jsonify({"error": f"Model '{filename}' not found"}), 404
+
+    model_path = os.path.join(MODELS_DIR, filename)
+    try:
+        load_model(model_path)
+        return jsonify({"current": current_model_name, "params": model.count_params()})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------------------------------------------------------------------

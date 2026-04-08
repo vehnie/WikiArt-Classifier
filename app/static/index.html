@@ -37,6 +37,50 @@
             font-size: 0.95rem;
         }
 
+        /* Model selector */
+        .model-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 1rem;
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        .model-selector label {
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .model-selector select {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.9rem;
+            font-family: inherit;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .model-selector select:focus {
+            outline: none;
+            border-color: #646cff;
+        }
+
+        .model-selector .model-status {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .model-selector .model-status.loading-model {
+            color: #646cff;
+        }
+
         /* Drop zone */
         .dropzone {
             border: 2px dashed #333;
@@ -312,6 +356,15 @@
             <p>Upload paintings to predict the artist using our ViT-B/16 deep learning model</p>
         </header>
 
+        <!-- Model selector -->
+        <div class="model-selector">
+            <label for="modelSelect">Model:</label>
+            <select id="modelSelect" onchange="switchModel(this.value)">
+                <option value="">Loading...</option>
+            </select>
+            <span class="model-status" id="modelStatus"></span>
+        </div>
+
         <!-- Drop zone -->
         <div class="dropzone" id="dropzone">
             <div class="dropzone-icon">&#128444;</div>
@@ -349,6 +402,69 @@
 
     <script>
         let selectedFiles = [];
+
+        // --- Model selector ---
+        async function loadModels() {
+            try {
+                const res = await fetch('/models');
+                const data = await res.json();
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = '';
+
+                data.models.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m.replace('.keras', '').replace(/_/g, ' ');
+                    if (m === data.current) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                const status = document.getElementById('modelStatus');
+                status.textContent = 'Active';
+                status.className = 'model-status';
+            } catch (err) {
+                console.error('Failed to load models:', err);
+            }
+        }
+
+        async function switchModel(filename) {
+            if (!filename) return;
+            const status = document.getElementById('modelStatus');
+            const select = document.getElementById('modelSelect');
+            const predictBtn = document.getElementById('predictBtn');
+
+            status.textContent = 'Loading...';
+            status.className = 'model-status loading-model';
+            select.disabled = true;
+            if (predictBtn) predictBtn.disabled = true;
+
+            try {
+                const res = await fetch('/models/switch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: filename }),
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    status.textContent = 'Error: ' + data.error;
+                    status.className = 'model-status';
+                } else {
+                    const params = data.params.toLocaleString();
+                    status.textContent = `Active (${params} params)`;
+                    status.className = 'model-status';
+                }
+            } catch (err) {
+                status.textContent = 'Failed to switch';
+                status.className = 'model-status';
+            } finally {
+                select.disabled = false;
+                if (predictBtn) predictBtn.disabled = false;
+            }
+        }
+
+        // Load model list on page load
+        loadModels();
 
         // --- Drop zone ---
         const dropzone = document.getElementById('dropzone');
